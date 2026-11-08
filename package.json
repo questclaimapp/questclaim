@@ -9,7 +9,9 @@
   "scripts": {
     "start": "node src/server.js",
     "test": "node --test",
-    "check": "node --check src/server.js && node --check src/store.js && node --check public/dashboard.js && node --check scripts/admin.js && node --check src/import.js && node --check src/cloud-worker.js && node --check src/cloud-store.js && node --check scripts/build-cloud.js",
-    "build:cloud": "node scripts/build-cloud.js"
+    "check": "node --check src/server.js && node --check src/store.js && node --check public/dashboard.js && node --check scripts/admin.js && node --check src/import.js && node --check src/cloud-worker.js && node --check src/cloud-store.js && node --check scripts/build-cloud.js && node --check src/timeline.js && node --check src/operator.js && node --check src/source-export.js && node --check scripts/prepare-cloud-operation.js && node --check scripts/prepare-source-export.js",
+    "build:cloud": "node scripts/build-cloud.js",
+    "operator:prepare": "node scripts/prepare-cloud-operation.js",
+    "source:prepare": "node scripts/prepare-source-export.js"
   }
 }

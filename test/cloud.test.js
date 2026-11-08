@@ -38,3 +38,20 @@ test('Worker preserves exact path boundary, validates CSRF/body, fail-closes mis
 test('Worker aggregation matches local service contract and expired session fails closed',async()=>{
  const {store,env}=setup();try{const token=await cloudStore(env.SPONSOR_DB).login(code);const member=await cloudStore(env.SPONSOR_DB).authenticate(token);assert.deepEqual(await cloudStore(env.SPONSOR_DB).overview(member,from,to),store.overview(member,from,to));store.db.prepare('UPDATE sponsor_sessions SET expires_at=?').run(from);assert.equal(await cloudStore(env.SPONSOR_DB).authenticate(token),null);}finally{store.close();}
 });
+test('operator endpoints do not exist publicly; health probes only separate sponsor DB',async()=>{
+ const {store,env}=setup();try{
+  for(const path of ['/sponsors/api/operator','/sponsors/api/import','/sponsors/api/provision','/sponsors/api/revoke']){const r=await worker.fetch(request(path),env);assert.equal(r.status,404);}
+  const r=await worker.fetch(request('/sponsors/api/health'),env);assert.equal(r.status,200);assert.equal((await r.json()).ok,true);
+ }finally{store.close();}
+});
+test('cloud overview rejects mixed snapshots during source revisions and partially imported owned hunts',async()=>{
+ const {store,env}=setup();try{
+  const member=await cloudStore(env.SPONSOR_DB).authenticate(await cloudStore(env.SPONSOR_DB).login(code));
+  store.db.prepare('INSERT INTO reporting_locks VALUES(?,?)').run('hunt','local-in-progress');
+  await assert.rejects(cloudStore(env.SPONSOR_DB).overview(member,from,to),/synchronization/);
+  store.db.exec('DELETE FROM reporting_locks');
+  const original=env.SPONSOR_DB.prepare.bind(env.SPONSOR_DB);let changed=false;
+  env.SPONSOR_DB.prepare=sql=>{if(!changed&&sql.startsWith('SELECT * FROM hunts')){store.db.exec('UPDATE reporting_revision SET value=value+1');changed=true;}return original(sql);};
+  await assert.rejects(cloudStore(env.SPONSOR_DB).overview(member,from,to),/synchronization/);
+ }finally{store.close();}
+});

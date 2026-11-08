@@ -36,3 +36,34 @@ main{padding-top:1.5rem}
 header span{font-size:.85rem}
 h2{font-size:1.6rem}
 }
+.trend{margin:2rem 0;padding:1.2rem 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.trend-controls{display:flex;align-items:center;flex-wrap:wrap;gap:.6rem 1rem}
+.trend-controls select{font:inherit;padding:.5rem;max-width:100%;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:4px}
+.trend-controls select:focus-visible,.trend-viewport:focus-visible,.trend-table-viewport:focus-visible,.trend-details summary:focus-visible{outline:3px solid #9b7027;outline-offset:3px}
+.trend-legend{display:flex;flex-wrap:wrap;gap:.5rem 1.2rem;padding:0;list-style:none;font-size:.9rem}
+.trend-legend li{display:flex;align-items:center;gap:.5rem}
+.trend-swatch{display:inline-block;flex:none;width:1.8rem;border-top:3px solid}
+.trend-swatch-views{border-color:#245ea3}
+.trend-swatch-searches{border-color:#24604b;border-top-style:dashed}
+.trend-swatch-finds{border-color:#a04422;border-top-style:dashed}
+.trend-swatch-claims{border-color:#75449a;border-top-style:dotted}
+.trend-viewport,.trend-table-viewport{max-width:100%;overflow-x:auto}
+.trend-svg{display:block;width:100%;min-width:600px;height:auto}
+.trend-grid{stroke:var(--line);stroke-width:1}
+.trend-axis{fill:var(--muted);font:13px system-ui,sans-serif}
+.trend-line{fill:none;stroke-width:2}
+.trend-dot{fill:var(--paper);stroke-width:2}
+.trend-series-views{stroke:#245ea3}
+.trend-series-searches{stroke:#24604b}
+.trend-series-finds{stroke:#a04422}
+.trend-series-claims{stroke:#75449a}
+.trend-unavailable{padding:1rem 0;color:var(--muted)}
+.trend-details{margin-top:1rem}
+.trend-details summary{cursor:pointer;font-weight:600}
+.trend-table{width:100%;border-collapse:collapse;font-size:.85rem;margin-top:1rem}
+.trend-table caption{text-align:left;color:var(--muted);padding-bottom:.7rem}
+.trend-table th,.trend-table td{text-align:right;vertical-align:top;padding:.6rem;border-bottom:1px solid var(--line)}
+.trend-table th:first-child{text-align:left;min-width:11rem}
+.trend-interval{display:block;font-size:.75rem;font-weight:400;color:var(--muted);overflow-wrap:anywhere}
+.trend-sources{font-size:.8rem;color:var(--muted);padding-left:1.1rem;overflow-wrap:anywhere}
+@media(forced-colors:active){.trend-line,.trend-dot{stroke:CanvasText}.trend-dot{fill:Canvas}.trend-axis{fill:CanvasText}.trend-grid{stroke:GrayText}.trend-swatch{border-color:CanvasText}}

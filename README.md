@@ -52,3 +52,17 @@ The first D1 database is within the included database allowance on both Free and
 `npm test` exercises source import validation/idempotency, true zero versus unavailable, unique engagement, cost denominator and period, approved membership, expiry/revocation, tenant scope, CSRF, logout, secure cookies, rate limits, HTTP headers and actual asset/API requests. All test data is synthetic, in-memory and confined to tests. Test fixtures query no real data or production services. Deployment verification separately checked public production routes without reading player records.
 
 Production verification: dashboard and assets 200 with expected content/service header; anonymous reporting and unapproved sign-in 401; hostile-origin POST 403. Home/privacy byte hashes unchanged. Ten local tests pass, including cloud adapter tenant isolation and aggregation parity. Not yet verified: real approved sponsor sign-in, production cross-tenant records, authoritative source completeness, automatic ingestion, end-to-end browser rendering/accessibility, actual analytics or payouts. Do not describe live entry/API availability as real sponsor analytics already populated.
+
+## Pending source-only graph work — November 8, 2026
+
+An accessible native SVG daily activity chart is implemented in the **uncommitted working tree only**, not live. It offers all four metrics or one metric at a time, a line-pattern/color legend, UTC date/count axes, gaps for unknown days, source coverage notes and an expandable exact-value table. A keyboard-focusable horizontal viewport preserves readable labels on narrow screens. No chart dependency is installed.
+
+Both local and cloud report implementations now provide tenant-scoped daily event aggregates through the shared `src/timeline.js` contract. Cards, unique-person counts and cost semantics remain intact. No synthetic trend is supplied. A graph with no covered daily values explicitly reports unavailable rather than drawing a zero line.
+
+New regression test source covers clipped UTC days, zero versus unknown, noncumulative counts, tenant scope/deduplication and partial coverage. Existing cloud/local equality assertions also cover the new field. **No tests, syntax checks, build, bundle generation, server restart, commit, push or deployment were run for this graph change.** Static inspection only; runtime/browser/accessibility verification remains pending approval.
+
+When execution is separately approved, run the existing checks/tests plus the new cases and browser verification. Cloud packaging must include the new `timeline.js` module: `scripts/build-cloud.js` has been edited accordingly but has not been run. Existing `.build` modules and the live Worker still contain the old cards-only version. A later authorized build must regenerate assets and deploy both backend daily aggregation and the updated frontend together. No D1 migration or production database write is required for this graph feature itself.
+
+### Production operator bridge
+
+See `docs/DEPLOYMENT.md` for the sanctioned-control-plane provisioning/revocation/import workflow and verification prerequisites. `operator:prepare` and `source:prepare` generate private operation files/read-only source SQL; they do not execute network calls. No public operator API, player-service key, email-derived sponsor approval, automated scheduler or invented tracking coverage is introduced. Actual sponsor records and qualified tracking evidence must exist before populated analytics can be claimed.

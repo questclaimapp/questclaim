@@ -1,5 +1,6 @@
 import { DatabaseSync } from 'node:sqlite';
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
+import { utcDayBuckets, dailyMetricSeries } from './timeline.js';
 
 export const digest = value => createHash('sha256').update(value).digest('hex');
 export const metrics = ['views', 'searches', 'finds', 'claims'];
@@ -31,6 +32,9 @@ CREATE TABLE IF NOT EXISTS events (
 );
 CREATE INDEX IF NOT EXISTS events_hunt_time ON events(hunt_id,metric,occurred_at);
 CREATE INDEX IF NOT EXISTS hunts_sponsor ON hunts(sponsor_id);
+CREATE TABLE IF NOT EXISTS reporting_locks (hunt_id TEXT PRIMARY KEY, run_id TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS reporting_revision (id INTEGER PRIMARY KEY CHECK(id=1), value INTEGER NOT NULL);
+INSERT OR IGNORE INTO reporting_revision VALUES(1,0);
 `;
 export function openStore(path = ':memory:') {
  const db = new DatabaseSync(path); db.exec(schema);
@@ -60,10 +64,16 @@ export function openStore(path = ':memory:') {
   logout(token) { if (token) sessions.delete(digest(token)); },
   overview(member, from, to) {
    const hunts = db.prepare('SELECT * FROM hunts WHERE sponsor_id=? ORDER BY title,id').all(member.sponsor_id);
+   const buckets = utcDayBuckets(from, to);
    return { sponsorName: member.name, period: { from, to }, hunts: hunts.map(hunt => {
     const activity = {};
+    const timeline = { interval: 'day', timeZone: 'UTC', aggregation: 'noncumulative_event_count', from, to, buckets, series: {} };
     for (const metric of metrics) {
-     const coverage = db.prepare('SELECT * FROM coverage WHERE hunt_id=? AND metric=?').get(hunt.id, metric);
+     const coverage = db.prepare('SELECT * FROM coverage WHERE hunt_id=? AND metric=? AND NOT EXISTS(SELECT 1 FROM reporting_locks WHERE hunt_id=coverage.hunt_id)').get(hunt.id, metric);
+     const dailyRows = coverage ? db.prepare(`SELECT substr(occurred_at,1,10) AS day, COUNT(*) AS count
+      FROM events WHERE hunt_id=? AND metric=? AND occurred_at>=? AND occurred_at<?
+      GROUP BY substr(occurred_at,1,10) ORDER BY day`).all(hunt.id, metric, from, to) : [];
+     timeline.series[metric] = dailyMetricSeries(buckets, coverage, dailyRows);
      if (!coverage || coverage.from_at > from || coverage.through_at < to) {
       activity[metric] = { available: false, count: null, uniquePeople: null, reason: 'Verified source coverage does not cover this whole period.', coverage: coverage ?? null };
       continue;
@@ -80,7 +90,7 @@ export function openStore(path = ':memory:') {
      hunt.currency === 'USD' && hunt.cost_basis && hunt.cost_source && hunt.cost_from === from && hunt.cost_to === to);
     const costAvailable = verifiedCost && activity.searches.available && engaged !== null && engaged > 0;
     return { id: hunt.id, title: hunt.title,
-     prize: { status: hunt.prize_status, asOf: hunt.status_as_of, source: hunt.status_source }, activity,
+     prize: { status: hunt.prize_status, asOf: hunt.status_as_of, source: hunt.status_source }, activity, timeline,
      cost: { available: costAvailable, minorPerEngagedPlayer: costAvailable ? hunt.cost_minor / engaged : null,
       amountMinor: verifiedCost ? hunt.cost_minor : null, currency: verifiedCost ? hunt.currency : null,
       basis: verifiedCost ? hunt.cost_basis : null, source: verifiedCost ? hunt.cost_source : null,

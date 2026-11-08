@@ -4,3 +4,4 @@ data/
 .env*
 coverage/
 .build/
+operator-private/

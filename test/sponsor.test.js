@@ -52,3 +52,23 @@ test('secure deployment uses host-only secure cookies and rate limits repeated l
  const status=await new Promise((resolve,reject)=>{const req=http.get('http://127.0.0.1:18972/healthz',{headers:{host:'evil.invalid'}},res=>{res.resume();resolve(res.statusCode);});req.on('error',reject);});assert.equal(status,400);
  }finally{app.closeAllConnections();await new Promise(resolve=>app.close(resolve));store.close();}
 });
+
+test('daily report remains tenant-scoped, deduplicated and distinct from period totals',()=>{
+ const {store,hunt}=fixture();try{
+  importSnapshot(store.db,{version:1,hunts:[hunt]});
+  const member=store.authenticate(store.login(code,now()),now());
+  const result=store.overview(member,from,to);assert.equal(result.hunts.length,1);
+  const timeline=result.hunts[0].timeline;
+  assert.equal(timeline.timeZone,'UTC');assert.equal(timeline.aggregation,'noncumulative_event_count');
+  assert.equal(timeline.buckets.length,6);
+  assert.deepEqual(timeline.series.searches.points.map(point=>point.count),[0,0,3,0,0,0]);
+  assert.deepEqual(timeline.series.finds.points.map(point=>point.count),[0,0,1,0,0,0]);
+  assert.deepEqual(timeline.series.claims.points.map(point=>point.count),[0,0,1,0,0,0]);
+  assert.equal(result.hunts[0].activity.searches.uniquePeople,2);
+  // Whole-period total is unavailable, but genuinely covered individual days may still plot.
+  store.db.prepare("UPDATE coverage SET from_at=?,through_at=? WHERE hunt_id='h1' AND metric='searches'").run('2026-11-02T00:00:00.000Z','2026-11-05T00:00:00.000Z');
+  const partial=store.overview(member,from,to).hunts[0];
+  assert.equal(partial.activity.searches.count,null);
+  assert.deepEqual(partial.timeline.series.searches.points.map(point=>point.count),[null,0,3,0,null,null]);
+ }finally{store.close();}
+});

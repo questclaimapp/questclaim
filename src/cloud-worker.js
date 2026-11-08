@@ -22,6 +22,7 @@ export function createWorker(assets) {return {async fetch(request,env) {
   const route=url.pathname;
   if(route==='/sponsors/dashboard'&&request.method==='GET')return new Response(null,{status:308,headers:{...headers,location:'/sponsors/dashboard/'}});
   if(assets[route]&&['GET','HEAD'].includes(request.method))return new Response(request.method==='HEAD'?null:assets[route].body,{headers:{...headers,'content-type':assets[route].type}});
+  if(route==='/sponsors/api/health'&&request.method==='GET'){if(!env.SPONSOR_DB)return json(503,{ok:false});await env.SPONSOR_DB.prepare('SELECT 1 AS ok').first();return json(200,{ok:true,service:'sponsor-metrics',features:['daily-utc-graph','scoped-reporting']});}
   if(!['/sponsors/api/session','/sponsors/api/logout','/sponsors/api/overview'].includes(route))return json(404,{error:'Not found.'});
   if(!env.SPONSOR_DB)return json(503,{error:'Separate sponsor reporting store is not configured.'});
   const store=cloudStore(env.SPONSOR_DB), now=new Date();
