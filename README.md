@@ -1,6 +1,6 @@
 # QuestClaim sponsor website
 
-A new, isolated website-only source baseline for the sponsor hunt report. It is **not deployed** and is not a checkout of the player app. No player files or player Supabase resources are used.
+A new, isolated website-only source baseline for the sponsor hunt report. It is deployed at **https://questclaim.com/sponsors/dashboard/** using a separate Cloudflare Worker and sponsor-only D1 database. It is not a checkout of the player app. No player files or player Supabase resources are used.
 
 ## Run locally
 
@@ -37,14 +37,18 @@ There is no public import endpoint and no player service credential. An administ
 
 Reports use UTC inclusive-start/exclusive-end intervals. UI defaults to the last 30 completed UTC days. Missing/partial source coverage is **Unavailable**, never zero. A true zero requires complete source-attested coverage for the selected interval.
 
-## Deployment gate
+## Production deployment
 
-See [architecture and deployment](docs/DEPLOYMENT.md). This repository has no Actions workflows, deployment hook configuration, or production credentials. Its new feature branch is not connected to a known production deployment. Deployment access is currently blocked by the existing Cloudflare connector permission refusal. This project does not attempt to bypass it.
+See [architecture and deployment](docs/DEPLOYMENT.md). After the user reported changed Cloudflare access, a minimal sanctioned account check succeeded. The Workers/D1 adaptation was deployed through that connector, without alternate credentials or browser access. The original public website Worker was not replaced.
 
-Production requires a separate Node 24 service with a persistent, private sponsor-only volume, HTTPS and explicit same-origin reverse proxy routes from questclaim.com. Merely pushing this repository does not add routes to the existing Cloudflare Worker. No infrastructure was provisioned. The existing public website and player authentication are unchanged.
+Production uses `src/cloud-worker.js` and `src/cloud-store.js`, a separate D1 database, persistent hashed sessions and native sign-in rate limiting. `npm run build:cloud` produces multipart-ready modules under ignored `.build/`; deployed resource IDs and exact routes are recorded in `cloudflare-deployment.json`. The local Node/SQLite implementation remains available and has contract-parity tests against the cloud adapter.
+
+**Live access/data limitations:** no approved sponsor membership, hunt, metrics or verified cost has been invented or seeded. Public secured entry and private APIs are live; actual sponsors need independently verified membership issuance and authoritative records. Read-only source inspection found zero sponsors, sponsor-hunt links, spotlight impressions and cost certifications in the existing Supabase project. General player events are not substituted for attributed sponsor metrics. There is no runtime Supabase connection or automatic source import.
+
+The first D1 database is within the included database allowance on both Free and Paid plans; no paid plan subscription or upgrade was created. Usage/storage are subject to Cloudflare's normal allowances and overage rules. Billing-plan inspection itself was OAuth-forbidden and was not retried or bypassed.
 
 ## Verification
 
-`npm test` exercises source import validation/idempotency, true zero versus unavailable, unique engagement, cost denominator and period, approved membership, expiry/revocation, tenant scope, CSRF, logout, secure cookies, rate limits, HTTP headers and actual asset/API requests. All test data is synthetic, in-memory and confined to tests. No real data or production services are queried.
+`npm test` exercises source import validation/idempotency, true zero versus unavailable, unique engagement, cost denominator and period, approved membership, expiry/revocation, tenant scope, CSRF, logout, secure cookies, rate limits, HTTP headers and actual asset/API requests. All test data is synthetic, in-memory and confined to tests. Test fixtures query no real data or production services. Deployment verification separately checked public production routes without reading player records.
 
-Not yet verified: production TLS/proxy/volume/edge limits, actual sponsor identity issuance, authoritative source completeness, ingestion pipeline, end-to-end browser rendering and accessibility audit, production domain routes, production counts or payouts. No claim is made that this is live.
+Production verification: dashboard and assets 200 with expected content/service header; anonymous reporting and unapproved sign-in 401; hostile-origin POST 403. Home/privacy byte hashes unchanged. Ten local tests pass, including cloud adapter tenant isolation and aggregation parity. Not yet verified: real approved sponsor sign-in, production cross-tenant records, authoritative source completeness, automatic ingestion, end-to-end browser rendering/accessibility, actual analytics or payouts. Do not describe live entry/API availability as real sponsor analytics already populated.

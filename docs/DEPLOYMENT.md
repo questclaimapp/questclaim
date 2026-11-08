@@ -41,3 +41,34 @@ No GitHub Actions/CI deployment configuration is included. At inspection the rem
 ## Remaining scope
 
 This slice prioritizes a meaningful sponsor hunt story, not vanity charts. Sponsor password/email onboarding, full account recovery/MFA, automatic event bridge, long-term audit/retention, prize editing, payout views and financial settlement are not implemented. Current production schema/event availability is unverified. Future work must preserve the separate sponsor boundary and leave in-app `dashboard.tsx`/`sponsor.tsx` untouched. No Stripe integration.
+
+## Deployment completed — November 7, 2026, 7:27 PM CST
+
+This section supersedes the earlier blocked/not-executed status above. The historical notes are retained to show why no blocked path was bypassed.
+
+After Anthony reported changed access, a **new minimal sanctioned** GET /accounts check succeeded. Workers, D1 and zone-route operations then succeeded through the same OAuth connector. No alternate token, CLI credential, browser login/storage or undocumented endpoint was used. Billing subscription inspection separately returned HTTP 403 because no OAuth scope covers that endpoint; it was not retried. No paid plan was created/upgraded.
+
+Deployed a new service `questclaim-sponsor-metrics`, separate from the original public Worker `solitary-mouse-0933`. Production now uses native Workers `Request`/`Response`, Web Crypto, persistent hashed sessions and separate D1 (`7193c5cc-2e83-43da-9bf7-3657c402bc7a`). Node/SQLite remains only the local alternative. Cloud bindings use D1 directly, not Cloudflare REST calls from the Worker. Compatibility date is 2026-11-07. Observability and traces are enabled at 10% sampling with query-string redaction; code does not log invitations, cookies or bodies.
+
+Created the first account D1 database, a schema-only ~70 KB store, with no members/hunts/events/cost seeded. The first database is within included database allowances on both Workers Free and Paid; no subscription purchase was performed. Queries/storage still follow normal plan usage/overage rules: https://developers.cloudflare.com/d1/platform/pricing/ . Do not promise unlimited free usage.
+
+Three exact route patterns point to the new service:
+- `https://questclaim.com/sponsors/dashboard`
+- `https://questclaim.com/sponsors/dashboard/*`
+- `https://questclaim.com/sponsors/api/*`
+
+Original apex/www Custom Domains remain on `solitary-mouse-0933`; public `/sponsors/`, homepage, legal and player paths were not rewritten. Both existing homepage/privacy SHA-256 hashes were unchanged after deployment. No production rollback or overwrite of existing scripts occurred. To disable this slice if necessary, an authorized operator can remove just these three newly created route records; do not delete the public custom domain or original Worker.
+
+Verification through public HTTPS: dashboard and both assets 200 with expected body and `x-questclaim-service: sponsor-metrics`; anonymous overview 401; invalid/unapproved invitation (including malicious role/sponsor fields) 401. Private responses are no-store, CSP protected and HSTS enabled. The cloud-adapter tests validate approved membership, metrics, tenant scope, logout/revocation/expiry and local/cloud aggregation equivalence. Native rate limiting is approximate per Cloudflare location, not a strict global quota.
+
+### Actual data readiness
+
+Read-only sanctioned Supabase inspection, with no player records fetched and no mutation:
+- `public.sponsors`: 0 records.
+- `public.sponsor_hunts`: 0 sponsor-hunt links.
+- `public.spotlight_impressions`: 0 records.
+- `public.sponsor_cost_certifications`: 0 records.
+
+Schema evidence: `hunt_events` has hunt/user/session identifiers, kind, dig_result, duration_ms and created_at; general events alone are **not** a verified sponsor audience. `spotlight_impressions` is keyed by spotlight/user/day and must not be mislabeled total hunt page views. No generic player activity was copied to simulate sponsor analytics. No runtime player Supabase credentials were attached to the Worker.
+
+The live URL is the secured sponsor entry/reporting service, **not evidence that real sponsors can already view populated metrics**. Approved identities and authoritative sponsor-attributed sources remain unconfigured. No production authenticated tenant fixtures were manufactured; production cross-tenant populated-data testing remains pending actual verified accounts. Full onboarding/recovery, automatic signed ingestion and original prize/payout expansion remain deferred.

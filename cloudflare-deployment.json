@@ -1,0 +1,8 @@
+{
+  "worker": "questclaim-sponsor-metrics",
+  "compatibility_date": "2026-11-07",
+  "database": {"name": "questclaim-sponsor-metrics", "id": "7193c5cc-2e83-43da-9bf7-3657c402bc7a", "binding": "SPONSOR_DB"},
+  "login_rate_limit": {"binding": "LOGIN_LIMITER", "namespace_id": "71933657", "limit": 10, "period": 60},
+  "routes": ["https://questclaim.com/sponsors/dashboard", "https://questclaim.com/sponsors/dashboard/*", "https://questclaim.com/sponsors/api/*"],
+  "observability": {"enabled": true, "redact_query_string": true, "head_sampling_rate": 0.1, "traces": {"enabled": true, "head_sampling_rate": 0.1}}
+}

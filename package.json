@@ -9,6 +9,7 @@
   "scripts": {
     "start": "node src/server.js",
     "test": "node --test",
-    "check": "node --check src/server.js && node --check src/store.js && node --check public/dashboard.js && node --check scripts/admin.js && node --check src/import.js"
+    "check": "node --check src/server.js && node --check src/store.js && node --check public/dashboard.js && node --check scripts/admin.js && node --check src/import.js && node --check src/cloud-worker.js && node --check src/cloud-store.js && node --check scripts/build-cloud.js",
+    "build:cloud": "node scripts/build-cloud.js"
   }
 }
